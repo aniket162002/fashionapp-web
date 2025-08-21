@@ -35,7 +35,9 @@ import '../../repositories/address_repository.dart';
 import 'otp.dart';
 
 class Login extends StatefulWidget {
-  const Login({super.key});
+  final String? phoneNumber;
+  
+  const Login({super.key, this.phoneNumber});
 
   @override
   _LoginState createState() => _LoginState();
