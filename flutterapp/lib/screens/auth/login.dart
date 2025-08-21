@@ -66,6 +66,13 @@ class _LoginState extends State<Login> {
     );
     super.initState();
     fetch_country();
+    
+    // If phone number is provided, set it and switch to phone login
+    if (widget.phoneNumber != null && widget.phoneNumber!.isNotEmpty) {
+      _phone = widget.phoneNumber;
+      _phoneNumberController.text = widget.phoneNumber!;
+      _login_by = "phone";
+    }
   }
 
   fetch_country() async {
