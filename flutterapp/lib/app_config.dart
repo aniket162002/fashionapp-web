@@ -35,4 +35,3 @@ class AppConfig {
     return super.toString();
   }
 }
-

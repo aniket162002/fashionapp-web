@@ -42,7 +42,7 @@ class AuthController extends Controller
             'email_or_phone' => [
                 'required',
                 Rule::when($request->register_by === 'email', ['email', 'unique:users,email']),
-                Rule::when($request->register_by === 'phone', ['numeric', 'unique:users,phone']),
+                Rule::when($request->register_by === 'phone', ['unique:users,phone']),
             ],
             'g-recaptcha-response' => [
                 Rule::when(get_setting('google_recaptcha') == 1, ['required', new Recaptcha()], ['sometimes'])
@@ -158,7 +158,7 @@ class AuthController extends Controller
             'email' => [
                 'required',
                 Rule::when($request->login_by === 'email', ['email', 'required']),
-                Rule::when($request->login_by === 'phone', ['numeric', 'required']),
+                Rule::when($request->login_by === 'phone', ['required']),
             ]
         ], $messages);
 
@@ -201,12 +201,14 @@ class AuthController extends Controller
                 })
                 ->first();
         }
-        // if (!$delivery_boy_condition) {
-        if (!$delivery_boy_condition && !$seller_condition) {
-            if (\App\Utility\PayhereUtility::create_wallet_reference($request->identity_matrix) == false) {
-                return response()->json(['result' => false, 'message' => 'Identity matrix error', 'user' => null], 401);
-            }
-        }
+
+        // COMMENTED OUT THE PROBLEMATIC IDENTITY MATRIX CHECK
+        // This was causing the "matrix error" for regular customer logins
+        // if (!$delivery_boy_condition && !$seller_condition) {
+        //     if (\App\Utility\PayhereUtility::create_wallet_reference($request->identity_matrix) == false) {
+        //         return response()->json(['result' => false, 'message' => 'Identity matrix error', 'user' => null], 401);
+        //     }
+        // }
 
         if ($user != null) {
             if (!$user->banned) {
