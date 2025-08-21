@@ -98,35 +98,86 @@ class _LoginState extends State<Login> {
     var password = _passwordController.text.toString();
 
     if (_login_by == 'email' && email == "") {
+      Loading.close();
       ToastComponent.showDialog(AppLocalizations.of(context)!.enter_email);
       return;
-    } else if (_login_by == 'phone' && _phone == "") {
+    } else if (_login_by == 'phone' && (_phone == "" || _phone == null)) {
+      Loading.close();
       ToastComponent.showDialog(
         AppLocalizations.of(context)!.enter_phone_number,
       );
       return;
     } else if (password == "") {
+      Loading.close();
       ToastComponent.showDialog(AppLocalizations.of(context)!.enter_password);
       return;
     }
 
-    var loginResponse = await AuthRepository().getLoginResponse(
-      _login_by == 'email' ? email : _phone,
-      password,
-      _login_by,
-    );
-    Loading.close();
+    try {
+      var loginResponse = await AuthRepository().getLoginResponse(
+        _login_by == 'email' ? email : _phone!,
+        password,
+        _login_by,
+      );
+      Loading.close();
 
-    // empty temp user id after logged in
-    temp_user_id.$ = "";
-    temp_user_id.save();
+      // empty temp user id after logged in
+      temp_user_id.$ = "";
+      temp_user_id.save();
 
-    if (loginResponse.result == false) {
-      if (loginResponse.message.runtimeType == List) {
-        ToastComponent.showDialog(loginResponse.message!.join("\n"));
+      if (loginResponse.result == false) {
+        String errorMessage = "Login failed";
+        
+        if (loginResponse.message != null) {
+          if (loginResponse.message.runtimeType == List) {
+            errorMessage = loginResponse.message!.join("\n");
+          } else {
+            errorMessage = loginResponse.message!.toString();
+          }
+        }
+        
+        // Handle specific error messages
+        if (errorMessage.toLowerCase().contains('matrix')) {
+          errorMessage = "Authentication error. Please try again.";
+        } else if (errorMessage.toLowerCase().contains('user not found')) {
+          errorMessage = "Account not found. Please register first.";
+        } else if (errorMessage.toLowerCase().contains('unauthorized')) {
+          errorMessage = "Incorrect password. Please try again.";
+        }
+        
+        ToastComponent.showDialog(errorMessage);
         return;
       }
-      ToastComponent.showDialog(loginResponse.message!.toString());
+
+      // Login successful
+      if (loginResponse.user != null) {
+        ToastComponent.showDialog("Login successful!");
+        AuthHelper().setUserData(loginResponse);
+        
+        // Update push notification token
+        FirebaseMessaging.instance.getToken().then((fcmToken) {
+          if (fcmToken != null) {
+            ProfileRepository().getDeviceTokenUpdateResponse(fcmToken);
+          }
+        });
+        
+        Navigator.pushAndRemoveUntil(context,
+            MaterialPageRoute(builder: (context) => Main()), (route) => false);
+      }
+    } catch (e) {
+      Loading.close();
+      String errorMessage = "Login failed: ${e.toString()}";
+      
+      // Handle network and other errors
+      if (e.toString().contains('network') || e.toString().contains('timeout')) {
+        errorMessage = "Network error. Please check your connection and try again.";
+      } else if (e.toString().contains('matrix')) {
+        errorMessage = "Authentication error. Please try again.";
+      }
+      
+      ToastComponent.showDialog(errorMessage);
+    }
+  }
     } else {
       print("in the success block ");
 
