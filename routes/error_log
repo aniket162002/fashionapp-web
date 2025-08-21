@@ -1,0 +1,8 @@
+[26-Mar-2025 05:45:59 UTC] PHP Fatal error:  Uncaught Error: Class "Route" not found in /home/thepriyafashion/public_html/routes/web.php:62
+Stack trace:
+#0 {main}
+  thrown in /home/thepriyafashion/public_html/routes/web.php on line 62
+[26-Mar-2025 05:45:59 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Support\Facades\Route" not found in /home/thepriyafashion/public_html/routes/api.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/thepriyafashion/public_html/routes/api.php on line 8
